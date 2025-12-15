@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pisces Love - Final</title>
+    <meta name="author" content="Irsyad Firmansyah">
+    
+    <!-- PWA Settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#ec4899">
+    <link rel="apple-touch-icon" href="https://api.dicebear.com/7.x/shapes/svg?seed=Pisces&backgroundColor=ec4899">
+
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Dancing+Script:wght@600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'], handwriting: ['Dancing Script', 'cursive'], cute: ['Patrick Hand', 'cursive'] },
+                    colors: { primary: '#ec4899', secondary: '#8b5cf6', darkbg: '#0f172a' },
+                    animation: { 'bounce-slow': 'bounce 3s infinite', 'wiggle': 'wiggle 1s ease-in-out infinite' },
+                    keyframes: { wiggle: { '0%, 100%': { transform: 'rotate(-3deg)' }, '50%': { transform: 'rotate(3deg)' } } }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { -webkit-tap-highlight-color: transparent; user-select: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .page-section { display: none; animation: fadeIn 0.3s ease-out; height: 100%; overflow-y: auto; padding-bottom: 100px; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .chat-bubble { max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 14px; margin-bottom: 6px; position: relative; word-wrap: break-word; }
+        .chat-me { background: linear-gradient(135deg, #ec4899, #be185d); color: white; border-bottom-right-radius: 4px; margin-left: auto; }
+        .chat-you { background: white; color: #374151; border-bottom-left-radius: 4px; margin-right: auto; border: 1px solid #f3f4f6;}
+        .dark .chat-you { background: #1e293b; color: #e2e8f0; border-color: #334155; }
+
+        .mood-btn { transition: transform 0.2s; cursor: pointer; filter: grayscale(100%); opacity: 0.6; }
+        .mood-btn.selected { transform: scale(1.3); filter: grayscale(0%); opacity: 1; }
+        
+        .robot-float { animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-darkbg dark:text-gray-100 transition-colors duration-300">
+
+    <div id="app-container" class="max-w-md mx-auto h-screen relative flex flex-col overflow-hidden bg-white dark:bg-darkbg shadow-2xl">
+
+        <!-- MODAL LOGIN -->
+        <div id="login-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-slate-900 w-full rounded-3xl p-8 shadow-2xl transform transition-all scale-100">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce-slow">
+                        <i class="fas fa-heart text-4xl text-primary"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold font-handwriting text-primary">Pisces Love</h2>
+                    <p class="text-xs text-gray-500 mt-2">Masuk untuk terhubung dengan belahan jiwa.</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <button onclick="signInGoogle()" class="w-full bg-white border border-gray-300 py-3.5 rounded-xl flex items-center justify-center gap-3 shadow-sm hover:bg-gray-50 text-sm font-bold text-gray-700 transition">
+                        <i class="fab fa-google text-red-500 text-lg"></i> Masuk dengan Google
+                    </button>
+                    <div class="relative flex py-2 items-center">
+                        <div class="flex-grow border-t border-gray-200"></div><span class="flex-shrink-0 mx-4 text-gray-400 text-xs">ATAU</span><div class="flex-grow border-t border-gray-200"></div>
+                    </div>
+                    <button onclick="showCodeLogin()" class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg active:scale-95 transition">
+                        Pakai Kode Pasangan
+                    </button>
+                </div>
+                <p class="text-[10px] text-center text-gray-400 mt-6">Created by Irsyad Firmansyah</p>
+            </div>
+        </div>
+
+        <!-- MODAL KODE (SETUP) -->
+        <div id="setup-modal" class="hidden fixed inset-0 z-[110] bg-white dark:bg-slate-900 flex flex-col items-center justify-center p-8">
+            <h2 class="text-2xl font-bold mb-2">Kode Rahasia</h2>
+            <p class="text-center text-gray-500 text-sm mb-6">Masukkan kode yang SAMA dengan pasanganmu agar data terhubung.</p>
+            <input type="text" id="setup-code" placeholder="Contoh: 140225" class="w-full p-4 text-center text-2xl font-bold tracking-widest border-2 border-pink-200 rounded-2xl mb-4 focus:border-primary outline-none uppercase">
+            <input type="text" id="setup-name" placeholder="Nama Panggilanmu" class="w-full p-3 text-center border border-gray-200 rounded-xl mb-6 text-sm">
+            <!-- FIX: Added ID to button -->
+            <button id="btn-save-setup" onclick="saveSetup()" class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg transition transform active:scale-95">Masuk Ruang Kita</button>
+            <button onclick="logout()" class="mt-4 text-xs text-gray-400 underline">Batal / Logout</button>
+        </div>
+
+        <!-- === APP INTERFACE === -->
+        <div id="main-app" class="hidden flex flex-col h-full">
+            
+            <!-- HEADER HOME -->
+            <div id="header-home" class="hidden px-6 pt-10 pb-4 bg-white dark:bg-darkbg sticky top-0 z-30">
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold tracking-widest mb-1">RUANG CINTA KITA</p>
+                        <h1 class="text-2xl font-bold font-handwriting text-primary">Hi, <span id="partner-name-display">Sayang</span> ❤️</h1>
+                    </div>
+                    <div onclick="switchTab('settings')" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center cursor-pointer border-2 border-transparent hover:border-primary transition overflow-hidden">
+                        <img id="my-avatar" class="w-full h-full object-cover">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENT AREA -->
+            <div class="flex-1 overflow-hidden relative bg-gray-50 dark:bg-darkbg/50">
+                
+                <!-- 1. HOME TAB -->
+                <div id="tab-home" class="page-section active px-6 pt-4 space-y-6">
+                    <!-- Days Counter Card -->
+                    <div class="relative bg-gradient-to-br from-pink-500 to-rose-500 rounded-3xl p-6 text-white shadow-xl shadow-pink-500/20 overflow-hidden">
+                        <div class="relative z-10 flex justify-between items-center">
+                            <div>
+                                <p class="text-pink-100 text-xs font-bold uppercase mb-1">Bersama Selama</p>
+                                <h2 class="text-5xl font-bold font-cute tracking-tight" id="days-count">0</h2>
+                                <p class="text-sm mt-1 opacity-90">Hari Penuh Cerita</p>
+                            </div>
+                            <!-- Cute Robot -->
+                            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=LoveBot&backgroundColor=transparent" class="w-24 h-24 robot-float drop-shadow-lg">
+                        </div>
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                    </div>
+
+                    <!-- Mood Tracker -->
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700">
+                        <h3 class="text-sm font-bold mb-4 text-gray-700 dark:text-gray-300">Gimana perasaanmu hari ini?</h3>
+                        <div class="flex justify-between px-2">
+                            <div onclick="updateMood('happy')" class="mood-btn" id="m-happy"><div class="text-4xl">🥰</div><p class="text-[10px] text-center mt-1">Happy</p></div>
+                            <div onclick="updateMood('sad')" class="mood-btn" id="m-sad"><div class="text-4xl">😢</div><p class="text-[10px] text-center mt-1">Sedih</p></div>
+                            <div onclick="updateMood('angry')" class="mood-btn" id="m-angry"><div class="text-4xl">😤</div><p class="text-[10px] text-center mt-1">Kesal</p></div>
+                            <div onclick="updateMood('tired')" class="mood-btn" id="m-tired"><div class="text-4xl">😴</div><p class="text-[10px] text-center mt-1">Lelah</p></div>
+                        </div>
+                        <div id="mood-message" class="mt-4 p-3 bg-pink-50 dark:bg-slate-700 rounded-xl text-xs text-pink-600 dark:text-pink-300 italic text-center hidden"></div>
+                    </div>
+
+                    <!-- Daily News -->
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex gap-4 items-start">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center shrink-0 mt-1">
+                            <i class="fas fa-newspaper"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm">Info Cinta Hari Ini</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed" id="daily-news">Loading berita harian...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. CHAT TAB -->
+                <div id="tab-chat" class="page-section hidden bg-white dark:bg-darkbg flex flex-col h-full !pb-0">
+                    <div class="px-4 py-3 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white/90 dark:bg-darkbg/90 backdrop-blur z-10">
+                        <h2 class="font-bold text-lg">Chat Room 💬</h2>
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    </div>
+                    <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50 dark:bg-slate-900/50">
+                        <!-- Chat Items -->
+                    </div>
+                    <div class="p-3 bg-white dark:bg-darkbg border-t border-gray-100 dark:border-slate-800 flex gap-2 items-center pb-20">
+                        <input type="text" id="chat-input" placeholder="Ketik pesan..." class="flex-1 bg-gray-100 dark:bg-slate-800 rounded-full px-4 py-2.5 text-sm focus:outline-none">
+                        <button onclick="askAIChat()" class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shadow-sm active:scale-90 transition"><i class="fas fa-magic"></i></button>
+                        <button onclick="sendChat()" class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg active:scale-90 transition"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+
+                <!-- 3. ALBUM TAB -->
+                <div id="tab-album" class="page-section hidden px-6 pt-6">
+                    <h2 class="text-2xl font-bold mb-4 font-handwriting">Album Kita 📸</h2>
+                    <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-xl text-xs text-yellow-700 mb-4">
+                        <i class="fas fa-info-circle mr-1"></i> Gunakan link Google Photos agar ringan.
+                    </div>
+                    <button onclick="addPhoto()" class="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-400 text-sm font-bold mb-6 hover:border-primary hover:text-primary transition active:scale-95">
+                        + Tambah Link Foto Baru
+                    </button>
+                    <div id="gallery-grid" class="columns-2 gap-3 space-y-3 pb-24"></div>
+                </div>
+
+                <!-- 4. SCHEDULE & GOALS -->
+                <div id="tab-plan" class="page-section hidden px-6 pt-6 space-y-8">
+                    <!-- Schedule -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h2 class="text-xl font-bold font-handwriting">Jadwal Kencan 📅</h2>
+                            <button onclick="addItem('schedule')" class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center shadow-sm active:scale-90 transition"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div id="list-schedule" class="space-y-3"></div>
+                    </div>
+                    <!-- Goals -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h2 class="text-xl font-bold font-handwriting">Impian Bersama 🎯</h2>
+                            <button onclick="addItem('goal')" class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shadow-sm active:scale-90 transition"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div id="list-goals" class="space-y-3"></div>
+                    </div>
+                    <!-- Notes -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h2 class="text-xl font-bold font-handwriting">Catatan Kecil 📝</h2>
+                            <button onclick="addItem('note')" class="w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center shadow-sm active:scale-90 transition"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div id="list-notes" class="grid grid-cols-2 gap-3"></div>
+                    </div>
+                </div>
+
+                <!-- 5. GAME TAB -->
+                <div id="tab-game" class="page-section hidden px-6 pt-6 text-center">
+                    <h2 class="text-2xl font-bold mb-2 font-handwriting">Main Bareng 🎮</h2>
+                    <p class="text-xs text-gray-500 mb-6">Tic Tac Toe Online (Realtime)</p>
+                    
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 inline-block w-full max-w-xs">
+                        <div class="flex justify-between mb-4 text-xs font-bold text-gray-400">
+                            <span>PLAYER 1: X</span>
+                            <span id="game-turn" class="text-primary">GILIRAN: ...</span>
+                            <span>PLAYER 2: O</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 w-full aspect-square mb-4" id="game-board">
+                            <!-- Board Generated JS -->
+                        </div>
+                        <button onclick="resetGame()" class="text-xs text-gray-400 underline hover:text-primary">Reset Papan</button>
+                    </div>
+                </div>
+
+                <!-- 6. AI ASSISTANT (Dedicated) -->
+                <div id="tab-ai" class="page-section hidden h-full flex flex-col !pb-0">
+                    <div class="px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white sticky top-0 z-10">
+                        <h2 class="font-bold text-lg"><i class="fas fa-robot mr-2"></i>Pisces AI</h2>
+                        <p class="text-xs opacity-80">Asisten hubungan cerdas 24/7</p>
+                    </div>
+                    <div id="ai-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+                        <div class="chat-bubble chat-ai">Halo! Aku asisten kalian. Mau tanya ide kado, solusi masalah, atau ramalan zodiak hari ini? ✨</div>
+                    </div>
+                    <div class="p-3 bg-white border-t border-gray-200 flex gap-2 pb-20">
+                        <input type="text" id="ai-main-input" placeholder="Tanya Pisces AI..." class="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none">
+                        <button onclick="sendMainAI()" class="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+                
+                <!-- 7. SETTINGS -->
+                <div id="tab-settings" class="page-section hidden px-6 pt-6">
+                    <h2 class="text-2xl font-bold mb-6 font-handwriting">Pengaturan ⚙️</h2>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 space-y-4 shadow-sm">
+                        <div>
+                            <label class="text-xs font-bold text-gray-400">Tanggal Jadian</label>
+                            <input type="date" id="conf-date" onchange="updateConfig('date')" class="w-full mt-1 p-2 bg-gray-50 rounded-lg text-sm border-none shadow-inner">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-400">Tema Warna</label>
+                            <div class="flex gap-3 mt-2">
+                                <button onclick="setTheme('pink')" class="w-8 h-8 rounded-full bg-pink-500 ring-2 ring-offset-2 ring-pink-500"></button>
+                                <button onclick="setTheme('blue')" class="w-8 h-8 rounded-full bg-blue-500 hover:scale-110 transition"></button>
+                                <button onclick="setTheme('green')" class="w-8 h-8 rounded-full bg-green-500 hover:scale-110 transition"></button>
+                                <button onclick="setTheme('dark')" class="w-8 h-8 rounded-full bg-slate-800 hover:scale-110 transition"></button>
+                            </div>
+                        </div>
+                        <button onclick="logout()" class="w-full py-3 text-red-500 font-bold text-sm bg-red-50 rounded-xl mt-4 active:scale-95 transition">Keluar / Ganti Akun</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- BOTTOM NAVIGATION -->
+            <div class="fixed bottom-0 w-full max-w-md bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800 flex justify-between px-6 py-3 pb-6 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+                <button onclick="switchTab('home')" class="nav-item active text-primary flex flex-col items-center gap-1"><i class="fas fa-home text-xl"></i><span class="text-[10px] font-bold">Home</span></button>
+                <button onclick="switchTab('chat')" class="nav-item text-gray-400 flex flex-col items-center gap-1"><i class="fas fa-comments text-xl"></i><span class="text-[10px] font-bold">Chat</span></button>
+                <button onclick="switchTab('album')" class="nav-item text-gray-400 flex flex-col items-center gap-1"><i class="fas fa-images text-xl"></i><span class="text-[10px] font-bold">Album</span></button>
+                <button onclick="switchTab('plan')" class="nav-item text-gray-400 flex flex-col items-center gap-1"><i class="fas fa-calendar-alt text-xl"></i><span class="text-[10px] font-bold">Plan</span></button>
+                <button onclick="switchTab('game')" class="nav-item text-gray-400 flex flex-col items-center gap-1"><i class="fas fa-gamepad text-xl"></i><span class="text-[10px] font-bold">Game</span></button>
+            </div>
+            
+            <!-- Floating AI Button -->
+            <button onclick="switchTab('ai')" class="fixed bottom-24 right-4 w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full shadow-lg flex items-center justify-center animate-bounce-slow z-40 active:scale-90 transition">
+                <i class="fas fa-robot"></i>
+            </button>
+
+        </div>
+    </div>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // FIREBASE CONFIG - PASTE YOUR CONFIG HERE
+        const firebaseConfig = {
+          apiKey: "AIzaSyBUj7CTtV1JFS_KXOdxsv9sc6ZL0EcFTfs",
+          authDomain: "pisces11aa.firebaseapp.com",
+          projectId: "pisces11aa",
+          storageBucket: "pisces11aa.firebasestorage.app",
+          messagingSenderId: "958036544732",
+          appId: "1:958036544732:web:15b17a8c27ee386b24b819",
+          measurementId: "G-P9YZ33P3M5"
+        };
+
+        const APP_ID = 'pisces_love_ultimate';
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Helper
+        const getCol = (name) => collection(db, 'artifacts', APP_ID, 'public', 'data', window.cid, name);
+        const getDocRef = (name, id) => doc(db, 'artifacts', APP_ID, 'public', 'data', window.cid, name, id);
+
+        window.user = null;
+        window.cid = localStorage.getItem('cid');
+        const GEMINI_KEY = ""; // Optional
+
+        // --- GLOBAL EXPORTS (Agar bisa dipencet di HTML) ---
+        window.showCodeLogin = () => {
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('setup-modal').classList.remove('hidden');
+        };
+
+        window.signInGoogle = async () => {
+            try { await signInWithPopup(auth, new GoogleAuthProvider()); } 
+            catch(e) { if(confirm("Google Error (Domain). Pakai Kode?")) window.showCodeLogin(); }
+        };
+
+        // --- SETUP & SAVE (FIXED) ---
+        window.saveSetup = async () => {
+            const btn = document.getElementById('btn-save-setup'); // FIXED ID
+            if(btn) btn.innerText = "Memproses...";
+            
+            const code = document.getElementById('setup-code').value.toUpperCase().trim();
+            const name = document.getElementById('setup-name').value.trim();
+            
+            if(code.length < 3 || !name) {
+                if(btn) btn.innerText = "Masuk Ruang Kita";
+                return alert("Isi kode dan nama!");
+            }
+
+            try {
+                // FALLBACK STRATEGY
+                let userCred;
+                try {
+                    userCred = await signInAnonymously(auth);
+                    await updateProfile(userCred.user, { displayName: name });
+                } catch(err) {
+                    console.log("Offline mode triggered");
+                    window.user = { uid: 'offline_'+Date.now(), displayName: name, isMock: true };
+                }
+
+                localStorage.setItem('cid', code);
+                localStorage.setItem('user_name', name);
+                window.cid = code;
+                
+                // Save user meta if online
+                if(userCred) {
+                    await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', code, 'users', userCred.user.uid), {
+                        name: name,
+                        uid: userCred.user.uid,
+                        lastActive: serverTimestamp()
+                    }, { merge: true });
+                }
+
+                location.reload();
+            } catch(e) { 
+                alert("Error: " + e.message);
+                if(btn) btn.innerText = "Masuk Ruang Kita";
+            }
+        };
+
+        window.logout = () => { if(confirm("Keluar?")) signOut(auth).then(()=> { localStorage.clear(); location.reload(); }) };
+
+        // AUTH LISTENER
+        onAuthStateChanged(auth, (u) => {
+            if(u) {
+                window.user = u;
+                // Check if CID exists
+                if(window.cid) initApp();
+                else document.getElementById('setup-modal').classList.remove('hidden');
+                document.getElementById('login-modal').classList.add('hidden');
+            } else {
+                // Check Local Mock
+                if(localStorage.getItem('user_name') && window.cid) {
+                     window.user = { uid: 'offline', displayName: localStorage.getItem('user_name'), isMock: true };
+                     initApp();
+                } else {
+                    document.getElementById('login-modal').classList.remove('hidden');
+                }
+            }
+        });
+
+        // INIT APP
+        function initApp() {
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('setup-modal').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('header-home').classList.remove('hidden');
+            
+            const avatarUrl = window.user?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${localStorage.getItem('user_name')}`;
+            document.getElementById('my-avatar').src = avatarUrl;
+            
+            // Listeners
+            listenUsers();
+            listenChat();
+            listenGallery();
+            listenData('schedule', 'list-schedule');
+            listenData('goal', 'list-goals');
+            listenData('note', 'list-notes');
+            listenGame();
+            
+            updateDailyNews();
+            updateDaysCount();
+        }
+
+        // --- FEATURES ---
+        function listenUsers() {
+            if(window.user?.isMock) return document.getElementById('partner-name-display').innerText = "Pasangan (Offline)";
+            
+            onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', window.cid, 'users'), (snap) => {
+                let partnerName = "Pasangan";
+                snap.forEach(d => {
+                    const data = d.data();
+                    if(data.uid !== window.user.uid) partnerName = data.name;
+                });
+                document.getElementById('partner-name-display').innerText = partnerName;
+            });
+        }
+
+        function updateDailyNews() {
+            const news = [
+                "Tips: Luangkan 10 menit untuk deep talk hari ini.",
+                "Ramalan: Energi cinta kalian sedang kuat!",
+                "Fakta: Berpegangan tangan bisa menurunkan hormon stres.",
+                "Quote: 'Cinta bukan mencari yang sempurna, tapi melengkapi.'",
+            ];
+            document.getElementById('daily-news').innerText = news[new Date().getDate() % news.length];
+        }
+
+        function updateDaysCount() {
+            const startStr = localStorage.getItem('start_date') || new Date().toISOString();
+            const diff = Math.floor((new Date() - new Date(startStr)) / (1000*60*60*24));
+            document.getElementById('days-count').innerText = diff;
+        }
+
+        window.updateMood = (mood) => {
+            document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('m-'+mood).classList.add('selected');
+            const msgs = { happy: "Senang melihatmu bahagia! 🥰", sad: "Gapapa sedih, aku di sini. 🫂", angry: "Tarik napas, jangan emosi ya. 💆‍♂️", tired: "Istirahatlah sayang. 💤" };
+            const box = document.getElementById('mood-message');
+            box.innerText = msgs[mood];
+            box.classList.remove('hidden');
+            
+            if(!window.user.isMock) {
+                addDoc(getCol('chats'), {
+                    text: `Status: Merasa ${mood}`,
+                    uid: 'system',
+                    createdAt: serverTimestamp()
+                });
+            }
+        };
+
+        // Chat & AI
+        function listenChat() {
+            if(window.user?.isMock) return;
+            const q = query(getCol('chats'), orderBy('createdAt', 'asc'));
+            onSnapshot(q, (snap) => {
+                const box = document.getElementById('chat-box');
+                box.innerHTML = '';
+                snap.forEach(d => {
+                    const data = d.data();
+                    const isMe = data.uid === window.user.uid;
+                    const isSys = data.uid === 'system';
+                    const isAI = data.uid === 'ai';
+                    
+                    let cls = isMe ? 'chat-me' : 'chat-you';
+                    if(isSys) cls = 'text-center text-xs text-gray-400 my-2 italic w-full';
+                    if(isAI) cls = 'chat-ai';
+
+                    box.innerHTML += `<div class="${cls} ${isSys ? '' : 'chat-bubble'}">${data.text}</div>`;
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        window.sendChat = async () => {
+            const inp = document.getElementById('chat-input');
+            if(!inp.value.trim()) return;
+            
+            if(window.user.isMock) {
+                const box = document.getElementById('chat-box');
+                box.innerHTML += `<div class="chat-bubble chat-me">${inp.value}</div>`;
+                inp.value = '';
+                return;
+            }
+
+            await addDoc(getCol('chats'), { text: inp.value, uid: window.user.uid, createdAt: serverTimestamp() });
+            inp.value = '';
+        };
+
+        // AI Mock (Use real key for production)
+        window.askAIChat = async () => {
+            const prompt = window.prompt("Minta saran AI?");
+            if(prompt) {
+                if(window.user.isMock) alert("AI butuh koneksi online.");
+                else await addDoc(getCol('chats'), { text: `🤖 AI: Saran bagus untukmu: Coba ajak dia makan enak!`, uid: 'ai', createdAt: serverTimestamp() });
+            }
+        };
+
+        window.sendMainAI = async () => {
+             const inp = document.getElementById('ai-main-input');
+             if(inp.value) {
+                 const msg = document.createElement('div'); msg.className = "chat-bubble chat-me"; msg.innerText = inp.value;
+                 document.getElementById('ai-messages').appendChild(msg);
+                 setTimeout(() => {
+                     const rep = document.createElement('div'); rep.className = "chat-bubble chat-ai"; rep.innerText = "Saran AI: " + inp.value + " (Simulasi)";
+                     document.getElementById('ai-messages').appendChild(rep);
+                 }, 1000);
+                 inp.value = '';
+             }
+        };
+
+        // Album
+        window.addPhoto = async () => {
+            const url = prompt("Masukkan Link Google Photos / Gambar:");
+            if(url && !window.user.isMock) await addDoc(getCol('album'), { url, createdAt: serverTimestamp() });
+        };
+
+        function listenGallery() {
+            if(window.user?.isMock) return;
+            onSnapshot(query(getCol('album'), orderBy('createdAt', 'desc')), (snap) => {
+                const grid = document.getElementById('gallery-grid');
+                grid.innerHTML = '';
+                snap.forEach(d => {
+                    grid.innerHTML += `<img src="${d.data().url}" class="w-full rounded-xl shadow-sm mb-3 break-inside-avoid" loading="lazy">`;
+                });
+            });
+        }
+
+        // Generic List
+        window.addItem = async (type) => {
+            const val = prompt(`Tambah ${type} baru:`);
+            if(val) {
+                 if(window.user.isMock) {
+                     alert("Tersimpan (Offline Mode)");
+                 } else {
+                     await addDoc(getCol(type + 's'), { text: val, createdAt: serverTimestamp() });
+                 }
+            }
+        };
+
+        function listenData(type, elemId) {
+            if(window.user?.isMock) return;
+            onSnapshot(query(getCol(type + 's'), orderBy('createdAt', 'desc')), (snap) => {
+                const list = document.getElementById(elemId);
+                list.innerHTML = '';
+                snap.forEach(d => {
+                    const data = d.data();
+                    const bg = type === 'note' ? 'bg-yellow-100 rotate-1' : 'bg-white border border-gray-100';
+                    list.innerHTML += `
+                        <div class="p-3 rounded-xl shadow-sm ${bg} flex justify-between items-center group">
+                            <span class="${type==='note'?'font-handwriting text-lg':''}">${data.text}</span>
+                            <button onclick="delItem('${type}s', '${d.id}')" class="text-red-300 opacity-50"><i class="fas fa-trash"></i></button>
+                        </div>`;
+                });
+            });
+        }
+        window.delItem = (col, id) => { if(confirm("Hapus?")) deleteDoc(getDocRef(col, id)); };
+
+        // Game
+        function listenGame() {
+            if(window.user?.isMock) return;
+            onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', window.cid, 'gamestate', 'ttt'), (doc) => {
+                const data = doc.data() || { board: Array(9).fill(''), turn: 'X' };
+                const boardEl = document.getElementById('game-board');
+                boardEl.innerHTML = '';
+                data.board.forEach((cell, i) => {
+                    boardEl.innerHTML += `<div onclick="moveGame(${i})" class="game-cell bg-gray-50 border border-gray-200 text-primary">${cell}</div>`;
+                });
+                document.getElementById('game-turn').innerText = `GILIRAN: ${data.turn}`;
+            });
+        }
+        window.moveGame = async (i) => {
+            if(window.user.isMock) return alert("Game butuh koneksi internet.");
+            const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', window.cid, 'gamestate', 'ttt');
+            const snap = await getDoc(ref);
+            let data = snap.exists() ? snap.data() : { board: Array(9).fill(''), turn: 'X' };
+            if(data.board[i]) return;
+            data.board[i] = data.turn;
+            data.turn = data.turn === 'X' ? 'O' : 'X';
+            await setDoc(ref, data);
+        };
+        window.resetGame = async () => setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', window.cid, 'gamestate', 'ttt'), { board: Array(9).fill(''), turn: 'X' });
+
+        // Navigation
+        window.switchTab = (tabId) => {
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            const header = document.getElementById('header-home');
+            if(tabId === 'home') header.classList.remove('hidden');
+            else header.classList.add('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('text-primary'));
+        };
+
+        window.toggleMusic = () => { 
+            const a = document.getElementById('bg-music'); 
+            if(a.paused) a.play(); else a.pause(); 
+        };
+        
+        document.getElementById('conf-date').onchange = (e) => {
+            localStorage.setItem('start_date', e.target.value);
+            location.reload();
+        };
+
+    </script>
+</body>
+</html>
