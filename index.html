@@ -86,7 +86,6 @@
             <p class="text-center text-gray-500 text-sm mb-6">Masukkan kode yang SAMA dengan pasanganmu agar data terhubung.</p>
             <input type="text" id="setup-code" placeholder="Contoh: 140225" class="w-full p-4 text-center text-2xl font-bold tracking-widest border-2 border-pink-200 rounded-2xl mb-4 focus:border-primary outline-none uppercase">
             <input type="text" id="setup-name" placeholder="Nama Panggilanmu" class="w-full p-3 text-center border border-gray-200 rounded-xl mb-6 text-sm">
-            <!-- FIX: Added ID to button -->
             <button id="btn-save-setup" onclick="saveSetup()" class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg transition transform active:scale-95">Masuk Ruang Kita</button>
             <button onclick="logout()" class="mt-4 text-xs text-gray-400 underline">Batal / Logout</button>
         </div>
@@ -224,7 +223,7 @@
                     </div>
                 </div>
 
-                <!-- 6. AI ASSISTANT (Dedicated) -->
+                <!-- 6. AI ASSISTANT -->
                 <div id="tab-ai" class="page-section hidden h-full flex flex-col !pb-0">
                     <div class="px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white sticky top-0 z-10">
                         <h2 class="font-bold text-lg"><i class="fas fa-robot mr-2"></i>Pisces AI</h2>
@@ -279,13 +278,12 @@
         </div>
     </div>
 
-    <!-- LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // FIREBASE CONFIG - PASTE YOUR CONFIG HERE
+        // FIREBASE CONFIG
         const firebaseConfig = {
           apiKey: "AIzaSyBUj7CTtV1JFS_KXOdxsv9sc6ZL0EcFTfs",
           authDomain: "pisces11aa.firebaseapp.com",
@@ -302,8 +300,8 @@
         const db = getFirestore(app);
         
         // Helper
-        const getCol = (name) => collection(db, 'artifacts', APP_ID, 'public', 'data', window.cid, name);
-        const getDocRef = (name, id) => doc(db, 'artifacts', APP_ID, 'public', 'data', window.cid, name, id);
+        const getCol = (name) => collection(db, 'artifacts', APP_ID, 'public', 'data', 'couples', window.cid, name);
+        const getDocRef = (name, id) => doc(db, 'artifacts', APP_ID, 'public', 'data', 'couples', window.cid, name, id);
 
         window.user = null;
         window.cid = localStorage.getItem('cid');
@@ -317,14 +315,11 @@
 
         window.signInGoogle = async () => {
             try { await signInWithPopup(auth, new GoogleAuthProvider()); } 
-            catch(e) { if(confirm("Google Error (Domain). Pakai Kode?")) window.showCodeLogin(); }
+            catch(e) { if(confirm("Google Error. Pakai Kode?")) window.showCodeLogin(); }
         };
 
-        // --- SETUP & SAVE (FIXED) ---
         window.saveSetup = async () => {
-            const btn = document.getElementById('btn-save-setup'); // FIXED ID
-            if(btn) btn.innerText = "Memproses...";
-            
+            const btn = document.getElementById('btn-save-setup');
             const code = document.getElementById('setup-code').value.toUpperCase().trim();
             const name = document.getElementById('setup-name').value.trim();
             
@@ -333,6 +328,8 @@
                 return alert("Isi kode dan nama!");
             }
 
+            btn.innerText = "Memproses...";
+            
             try {
                 // FALLBACK STRATEGY
                 let userCred;
@@ -426,7 +423,7 @@
             const news = [
                 "Tips: Luangkan 10 menit untuk deep talk hari ini.",
                 "Ramalan: Energi cinta kalian sedang kuat!",
-                "Fakta: Berpegangan tangan bisa menurunkan hormon stres.",
+                "Fakta: Tertawa bersama meningkatkan keintiman.",
                 "Quote: 'Cinta bukan mencari yang sempurna, tapi melengkapi.'",
             ];
             document.getElementById('daily-news').innerText = news[new Date().getDate() % news.length];
@@ -493,7 +490,6 @@
             inp.value = '';
         };
 
-        // AI Mock (Use real key for production)
         window.askAIChat = async () => {
             const prompt = window.prompt("Minta saran AI?");
             if(prompt) {
